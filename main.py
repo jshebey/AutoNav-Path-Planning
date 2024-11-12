@@ -153,61 +153,119 @@ def heuristic(curr, end):
   return row_diff + col_diff
 
 def findNeighbors(curr_loc, grid_dimensions):
+  """ Finds the valid neighbor grid cells to the current node
+
+    Args:
+        curr_loc: Current grid cell location
+        grid_dimensions: Grid row and column count
+
+    Returns:
+        A list of neighbors
+  """
   neighbors = []
 
-  #up
+  #Finds neighbor in the row above
   if curr_loc[0] != 0:
     neighbors.append((curr_loc[0] - 1, curr_loc[1]))
 
-  #down
+  #Finds neighbor in the row below
   if curr_loc[0] != grid_dimensions[0] - 1:
     neighbors.append((curr_loc[0] + 1, curr_loc[1]))
 
-  #left
+  #Finds neighbor in the column to the left
   if curr_loc[1] != 0:
     neighbors.append((curr_loc[0], curr_loc[1] - 1))
 
-  #right
+  #Finds neighbor in the column to the right
   if curr_loc[1] != grid_dimensions[1] - 1:
     neighbors.append((curr_loc[0], curr_loc[1] + 1))
 
   return neighbors
 
 def a_star(adjusted_cost_map, start, end):
+  """ Finds the best path using an A* search algorithm
 
+    Args:
+        adjusted_cost_map: cost map with close objects morphed together
+        and the area not within the lines as a high cost
+
+        start: Starting location
+
+        end: Goal location
+
+    Returns:
+        The cheapest and most optimal path
+  """
+
+  #Creates a priority queue
   p_queue = []
+  #Adds the starting node to the queue
   heapq.heappush(p_queue, (0, start))
 
+  #Holds each node's parent
   came_from = {}
+
+  #Dictionaries to map points to heuristic values
+
+  #g is the cost from the start to current node (current sum)
   g = {start: 0}
+  #f is the cost from the current node's path to the goal
   f = {start: heuristic(start, end)}
 
+  #Main loop runs while the queue isn't empty
   while p_queue:
+    #Current node is the node with the lowest f value in the queue
     curr_f, curr = heapq.heappop(p_queue)
+    #Checks if the goal has been reached
     if curr == end:
+      #List to keep track of path from start to end
       path = []
+
+      #Loops through each node and its parent until the end is reached
       while curr in came_from:
         path.append(curr)
         #Grabs parent
         curr = came_from[curr]
+      #Adds the starting node and reverse the list
       path.append(start)
       return path[::-1]
 
+    #Finds the neighbors of the current node
+    neighbors = findNeighbors(curr, adjusted_cost_map.shape) 
 
-    neighbors = findNeighbors(curr, adjusted_cost_map.shape)  
+    #Loops through each neighbor 
     for neighbor in neighbors:
+      #Gets the cost of the neighboring node
       neighbor_cost = adjusted_cost_map[neighbor[0], neighbor[1]]
+      #Calculates the new g cost from the start to the neighbor
       new_g = g[curr] + neighbor_cost
 
+      #Checks if the neighbor hasn't been visited or if the new path is cheaper
       if neighbor not in g or new_g < g[neighbor]:
+        #Adds the neighbor and current node value to the dictionary
         came_from[neighbor] = curr
+        #The neighbor and updated g value are added to the g list
         g[neighbor] = new_g
+        #The neighbor and updated f value are added to the f list
         f[neighbor] = new_g + heuristic(neighbor, end)
+        #Adds neighbor node to the explore node list
         heapq.heappush(p_queue, (f[neighbor], neighbor))
   
+  #Returns no path if none is found
   return None
 
 def drawPath(adjusted_cost_map, path):
+  """ Draws the A* found path on the cost map
+s
+    Args:
+        adjusted_cost_map: cost map with close objects morphed together
+        and the area not within the lines as a high cost
+
+        path: List of locations to go from the start to end node
+
+    Returns:
+        A 
+  """
   for loc in path:
     adjusted_cost_map[loc[0], loc[1]] = 0
   
